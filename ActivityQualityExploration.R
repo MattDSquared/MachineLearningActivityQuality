@@ -31,6 +31,7 @@ training <- rawdat.train[,keepvars]
 training <- mutate(training, 
                    timestamp = training$raw_timestamp_part_1 + 
                        training$raw_timestamp_part_2/1e6, 
+                   classe = factor(classe),
                    new_window = factor(new_window), 
                    user_name = factor(user_name))
 
@@ -68,7 +69,15 @@ print(gg)
 train.pca <- prcomp(select(training, -classe), center=TRUE, scale=TRUE)
 print(summary(train.pca))
 
-## Preprocessing
+## Train Basic Model
+model <- train(training$classe ~ ., method="rpart", data=training)
+print(confusionMatrix(quizing$classe, predict(model, quizing)))
+
+## PCA Preprocessing
 pre.pca <- preProcess(select(training, -classe), method="pca", thresh=.95)
 train.pca <- predict(pre.pca, select(training, -classe))
-model <- train(training$classe ~ ., method="glm", data=train.pca)
+quiz.pca <- predict(pre.pca, select(quizing,-classe))
+
+## Train PCA Model
+model <- train(training$classe ~ ., method="rpart", data=train.pca)
+print(confusionMatrix(quizing$classe, predict(model, quiz.pca)))
