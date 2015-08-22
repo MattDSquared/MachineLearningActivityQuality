@@ -47,32 +47,33 @@ training <- select(training,
                    -user_name, 
                    -new_window, 
                    -X,
+                   -timestamp,
                    -raw_timestamp_part_1, 
                    -raw_timestamp_part_2,
                    -cvtd_timestamp)
        
 ## subset training into local test and train data
-inTrain <- createDataPartition(training$classe, p=.05, list=FALSE)
+inTrain <- createDataPartition(training$classe, p=.6, list=FALSE)
 quizing <- training[-inTrain,]
 training <- training[inTrain,]
 
 ## data exploration
-gg <- qplot(timestamp, num_window, 
-            data=filter(training,timestamp<1322600000))
-print(gg)
+#gg <- qplot(timestamp, num_window, 
+#            data=filter(training,timestamp<1322600000))
+#print(gg)
 
-gg <- qplot(timestamp, pitch_belt, data=filter(training,timestamp<1322600000))
-gg <- gg + geom_point(aes(timestamp, roll_belt), colour="blue")
-gg <- gg + geom_point(aes(timestamp, yaw_belt), colour="green")
-print(gg)
+#gg <- qplot(timestamp, pitch_belt, data=filter(training,timestamp<1322600000))
+#gg <- gg + geom_point(aes(timestamp, roll_belt), colour="blue")
+#gg <- gg + geom_point(aes(timestamp, yaw_belt), colour="green")
+#print(gg)
 
-gg <- qplot(timestamp, accel_belt_x, data=filter(training,timestamp<1322600000))
-gg <- gg + geom_point(aes(timestamp, accel_belt_y), colour="blue")
-gg <- gg + geom_point(aes(timestamp, accel_belt_z), colour="green")
-print(gg)
+#gg <- qplot(timestamp, accel_belt_x, data=filter(training,timestamp<1322600000))
+#gg <- gg + geom_point(aes(timestamp, accel_belt_y), colour="blue")
+#gg <- gg + geom_point(aes(timestamp, accel_belt_z), colour="green")
+#print(gg)
 
-train.pca <- prcomp(select(training, -classe), center=TRUE, scale=TRUE)
-print(summary(train.pca))
+#train.pca <- prcomp(select(training, -classe), center=TRUE, scale=TRUE)
+#print(summary(train.pca))
 
 ## Train Basic Model
 model <- train(training$classe ~ ., method="rf", 
@@ -81,10 +82,10 @@ print(confusionMatrix(quizing$classe, predict(model, select(quizing,-classe))))
 varImpPlot(model$finalModel)
 
 ## PCA Preprocessing
-pre.pca <- preProcess(select(training, -classe), method="pca", thresh=.95)
-train.pca <- predict(pre.pca, select(training, -classe))
-quiz.pca <- predict(pre.pca, select(quizing,-classe))
+#pre.pca <- preProcess(select(training, -classe), method="pca", thresh=.95)
+#train.pca <- predict(pre.pca, select(training, -classe))
+#quiz.pca <- predict(pre.pca, select(quizing,-classe))
 
-model.pca <- train(training$classe ~ ., method="rf", data=train.pca)
-print(confusionMatrix(quizing$classe, predict(model.pca, quiz.pca)))
-varImpPlot(model.pca$finalModel)
+#model.pca <- train(training$classe ~ ., method="rf", data=train.pca)
+#print(confusionMatrix(quizing$classe, predict(model.pca, quiz.pca)))
+#varImpPlot(model.pca$finalModel)
