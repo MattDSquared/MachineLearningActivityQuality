@@ -1,5 +1,6 @@
 library(caret)
 library(dplyr)
+library(randomForest)
 
 set.seed(1433)
 
@@ -39,17 +40,21 @@ dummies <- dummyVars(classe ~ user_name + new_window, data=training)
 
 training <- cbind(training, predict(dummies, newdata=training))
 
-training <- select(training, 
+# remove vars which are replaced with dummy variables
+# also remove variables that should be poor predictors of the test set, such as
+#   sample number.
+training <- select(training,
                    -user_name, 
+                   -new_window, 
+                   -X,
                    -raw_timestamp_part_1, 
                    -raw_timestamp_part_2,
-                   -cvtd_timestamp,
-                   -new_window)
+                   -cvtd_timestamp)
        
 ## subset training into local test and train data
-inTrain <- createDataPartition(training$classe, p=.1, list=FALSE)
-training <- training[inTrain,]
+inTrain <- createDataPartition(training$classe, p=.05, list=FALSE)
 quizing <- training[-inTrain,]
+training <- training[inTrain,]
 
 ## data exploration
 gg <- qplot(timestamp, num_window, 
@@ -70,14 +75,16 @@ train.pca <- prcomp(select(training, -classe), center=TRUE, scale=TRUE)
 print(summary(train.pca))
 
 ## Train Basic Model
-model <- train(training$classe ~ ., method="rpart", data=training)
-print(confusionMatrix(quizing$classe, predict(model, quizing)))
+model <- train(training$classe ~ ., method="rf", 
+               data=select(training,-classe))
+print(confusionMatrix(quizing$classe, predict(model, select(quizing,-classe))))
+varImpPlot(model$finalModel)
 
 ## PCA Preprocessing
 pre.pca <- preProcess(select(training, -classe), method="pca", thresh=.95)
 train.pca <- predict(pre.pca, select(training, -classe))
 quiz.pca <- predict(pre.pca, select(quizing,-classe))
 
-## Train PCA Model
-model <- train(training$classe ~ ., method="rpart", data=train.pca)
-print(confusionMatrix(quizing$classe, predict(model, quiz.pca)))
+model.pca <- train(training$classe ~ ., method="rf", data=train.pca)
+print(confusionMatrix(quizing$classe, predict(model.pca, quiz.pca)))
+varImpPlot(model.pca$finalModel)
