@@ -1,0 +1,6 @@
+---
+title: "Machine Learning - Activity Quality Classification"
+author: "MattDSquared"
+date: "Wednesday, August 19, 2015"
+output: html_document
+---
